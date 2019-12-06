@@ -1,9 +1,7 @@
 # install_mgr
 
 #### 介绍
-{**以下是码云平台说明，您可以替换此简介**
-码云是 OSCHINA 推出的基于 Git 的代码托管平台（同时支持 SVN）。专为开发者提供稳定、高效、安全的云端软件开发协作平台
-无论是个人、团队、或是企业，都能够用码云实现代码托管、项目管理、协作开发。企业项目请看 [https://gitee.com/enterprises](https://gitee.com/enterprises)}
+本机一键搭建mgr环境
 
 #### 软件架构
 软件架构说明
@@ -11,29 +9,15 @@
 
 #### 安装教程
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
-
-#### 使用说明
-
-1.  xxxx
-2.  xxxx
-3.  xxxx
-
-#### 参与贡献
-
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
+1. mysql安装包需要先解压到base目录，init.sh文件的mysql_base_dir变量的值。
+2. 如果端口不是4406/4407/4408，配置文件需要自行更改
+3. 安装目录默认是/data/mgr/
+4. 有疑问请联系mo_shan@yeah.net
+5. 如果安装过程中提示数据目录不为空或者端口被占用，可以加force关键字强制安装，但是需要用户确认数据目录可以删除，被占用的端口对应的进程可以停止服务。
+6. 仅支持在单机上开启多个端口搭建MGR
+7. 设置密码不要使用特殊字符，否则可能会出错（对特殊字符支持的不是很友好）
 
 
-#### 码云特技
 
-1.  使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2.  码云官方博客 [blog.gitee.com](https://blog.gitee.com)
-3.  你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解码云上的优秀开源项目
-4.  [GVP](https://gitee.com/gvp) 全称是码云最有价值开源项目，是码云综合评定出的优秀开源项目
-5.  码云官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
-6.  码云封面人物是一档用来展示码云会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
+演示：
+请参见demo.txt文本的操作记录
