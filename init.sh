@@ -49,7 +49,7 @@ function f_get_mysql_conf()
 	cat <<EOF |sed "s/999999/${1}/g" > ${3}
 [mysql]
 auto-rehash
-prompt                                                       = mysql(master)>\\ \\
+prompt                                                       = mysql( ${localhost_ip}:999999 )>\\ \\
 
 
 
