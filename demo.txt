@@ -1,0 +1,71 @@
+root /data/git/install_mgr >> bash init.sh
+
+[2019-12-06 14:23:14] [INFO] [172.20.10.2] Start installing MySQL for 4406
+[2019-12-06 14:23:14] [INFO] [172.20.10.2] Initializing for MySQL
+[2019-12-06 14:23:27] [INFO] [172.20.10.2] Initialization successful for MySQL
+[2019-12-06 14:23:27] [INFO] [172.20.10.2] Starting MySQL
+[2019-12-06 14:23:28] [INFO] [172.20.10.2] Successful startup for MySQL
+[2019-12-06 14:23:30] [INFO] [172.20.10.2] Changing password root@localhost
+[2019-12-06 14:23:30] [INFO] [172.20.10.2] Change password successfully for root@localhost
+[2019-12-06 14:23:30] [INFO] [172.20.10.2] The installation is complete for MySQL
+[2019-12-06 14:23:30] [INFO] [172.20.10.2] Start installing MGR
+[2019-12-06 14:23:30] [INFO] [172.20.10.2] Initialization successful for MGR
+[2019-12-06 14:23:30] [INFO] [172.20.10.2] Starting MGR
++---------------------------+--------------------------------------+--------------+-------------+--------------+
+| CHANNEL_NAME              | MEMBER_ID                            | MEMBER_HOST  | MEMBER_PORT | MEMBER_STATE |
++---------------------------+--------------------------------------+--------------+-------------+--------------+
+| group_replication_applier | e83622d4-17f0-11ea-912f-66b0a60a51f4 | moshan-style |        4406 | ONLINE       |
++---------------------------+--------------------------------------+--------------+-------------+--------------+
+[2019-12-06 14:23:32] [INFO] [172.20.10.2] Successful startup for MGR on 4406
+
+
+[2019-12-06 14:23:32] [INFO] [172.20.10.2] Start installing MySQL for 4407
+[2019-12-06 14:23:32] [INFO] [172.20.10.2] Initializing for MySQL
+[2019-12-06 14:23:44] [INFO] [172.20.10.2] Initialization successful for MySQL
+[2019-12-06 14:23:44] [INFO] [172.20.10.2] Starting MySQL
+[2019-12-06 14:23:45] [INFO] [172.20.10.2] Successful startup for MySQL
+[2019-12-06 14:23:47] [INFO] [172.20.10.2] Changing password root@localhost
+[2019-12-06 14:23:47] [INFO] [172.20.10.2] Change password successfully for root@localhost
+[2019-12-06 14:23:47] [INFO] [172.20.10.2] The installation is complete for MySQL
+[2019-12-06 14:23:47] [INFO] [172.20.10.2] Start installing MGR
+[2019-12-06 14:23:47] [INFO] [172.20.10.2] Initialization successful for MGR
+[2019-12-06 14:23:47] [INFO] [172.20.10.2] Starting MGR
++---------------------------+--------------------------------------+--------------+-------------+--------------+
+| CHANNEL_NAME              | MEMBER_ID                            | MEMBER_HOST  | MEMBER_PORT | MEMBER_STATE |
++---------------------------+--------------------------------------+--------------+-------------+--------------+
+| group_replication_applier | e83622d4-17f0-11ea-912f-66b0a60a51f4 | moshan-style |        4406 | ONLINE       |
+| group_replication_applier | f22831cb-17f0-11ea-9eb8-66b0a60a51f4 | moshan-style |        4407 | ONLINE       |
++---------------------------+--------------------------------------+--------------+-------------+--------------+
+[2019-12-06 14:23:53] [INFO] [172.20.10.2] Successful startup for MGR on 4407
+
+
+[2019-12-06 14:23:53] [INFO] [172.20.10.2] Start installing MySQL for 4408
+[2019-12-06 14:23:53] [INFO] [172.20.10.2] Initializing for MySQL
+[2019-12-06 14:24:05] [INFO] [172.20.10.2] Initialization successful for MySQL
+[2019-12-06 14:24:05] [INFO] [172.20.10.2] Starting MySQL
+[2019-12-06 14:24:06] [INFO] [172.20.10.2] Successful startup for MySQL
+[2019-12-06 14:24:08] [INFO] [172.20.10.2] Changing password root@localhost
+[2019-12-06 14:24:08] [INFO] [172.20.10.2] Change password successfully for root@localhost
+[2019-12-06 14:24:08] [INFO] [172.20.10.2] The installation is complete for MySQL
+[2019-12-06 14:24:08] [INFO] [172.20.10.2] Start installing MGR
+[2019-12-06 14:24:08] [INFO] [172.20.10.2] Initialization successful for MGR
+[2019-12-06 14:24:08] [INFO] [172.20.10.2] Starting MGR
++---------------------------+--------------------------------------+--------------+-------------+--------------+
+| CHANNEL_NAME              | MEMBER_ID                            | MEMBER_HOST  | MEMBER_PORT | MEMBER_STATE |
++---------------------------+--------------------------------------+--------------+-------------+--------------+
+| group_replication_applier | e83622d4-17f0-11ea-912f-66b0a60a51f4 | moshan-style |        4406 | ONLINE       |
+| group_replication_applier | f22831cb-17f0-11ea-9eb8-66b0a60a51f4 | moshan-style |        4407 | ONLINE       |
+| group_replication_applier | ff12325d-17f0-11ea-ad14-66b0a60a51f4 | moshan-style |        4408 | ONLINE       |
++---------------------------+--------------------------------------+--------------+-------------+--------------+
+[2019-12-06 14:24:12] [INFO] [172.20.10.2] Successful startup for MGR on 4408
+
+
++-----------+------------+----------------------------------------------------------------------------------+
+|Role       | Host       | Comand                                                                           |
++-----------+------------+----------------------------------------------------------------------------------+
+|Admin      | localhost  | mysql -uroot -pmgrpassword -S/data/mgr/logs/4406/mysqld.sock                     |
++-----------+------------+----------------------------------------------------------------------------------+
+|Test       | %          | mysql -utest -ptest -h172.20.10.2 -P4406                                         |
++-----------+------------+----------------------------------------------------------------------------------+
+root /data/git/install_mgr >> 
+
