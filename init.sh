@@ -36,6 +36,12 @@ then
 	source /etc/profile
 fi
 
+if [ "$(grep -c "^prompt" /etc/my.cnf)x" == "0x" ]
+then
+	sed -i '/\[mysql\]/aprompt                                                       = \\u@\\h:\\p\\ [\\ \\d\\ ]\\ >\\ ' /etc/my.cnf
+fi
+
+
 function f_get_mysql_conf()
 {
 	if [ ${4} -lt 7 ] #小于7个节点步长+2	
@@ -49,7 +55,7 @@ function f_get_mysql_conf()
 	cat <<EOF |sed "s/999999/${1}/g" > ${3}
 [mysql]
 auto-rehash
-prompt                                                       = mysql( ${localhost_ip}:999999 )>\\ \\
+prompt                                                       = \\u@\\h:\\p\\ [\\ \\d\\ ]\\ >\\ 
 
 
 
@@ -231,6 +237,7 @@ loose_group_replication_single_primary_mode                  = 0
 loose_group_replication_enforce_update_everywhere_checks     = 1
 loose_group_replication_unreachable_majority_timeout         = 120
 loose_group_replication_start_on_boot                        = 0
+loose_group_replication_ip_whitelist                         = "$(awk -F'.' '{print $1"."$2"."$3".0/24"}' <<< "${localhost_ip}")"
 EOF
 }
 
