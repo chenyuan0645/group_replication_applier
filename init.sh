@@ -30,7 +30,7 @@ server_id="$(awk -F'.' '{print $3$4}' <<< ${localhost_ip})"
 
 . /etc/profile
 
-if [ "$(which mysql)x" != "${mysql_base_dir}/${mysql_path}x" ]
+if [ "$(which mysql)x" != "${mysql_base_dir}/bin/${mysql_path}x" ]
 then
 	echo "export PATH=${mysql_base_dir}/bin:\${PATH}" >> /etc/profile
 	source /etc/profile
