@@ -346,7 +346,7 @@ function f_init_mysql()
 	{ sleep 60 && touch /tmp/.stop_file; }&
 	while :
 	do
-		sleep 1
+		sleep 3
 		if [ "$(ps -ef|grep mysqld|grep -c "${mysql_conf}")x" == "0x" ]
 		then
 			f_logging "ERROR" "Startup failed for \033[35mMySQL\033[0m" "2" "0"|tee -a ${log_file}
