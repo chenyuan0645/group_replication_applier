@@ -5,17 +5,21 @@
 # Created Time: 2019-12-04 09:31:07
 # Function    : Install MGR for Linux
 #########################################################################
-mgr_install_dir="/data/mgr"
+mgr_install_dir="/data/mgr/mgr"
 mgr_port=(4406 4407 4408)
 mgr_admin_passwd="mgrpassword"
-mysql_base_dir="/data/mysql/base"
+mysql_base_dir="/data/mgr/base"
 mysql_path="mysql"
 test_user="test"
 test_passwd="test"
+repl_user="repl_user"
+repl_passwd="repl_user615234"
 
 
 #以下变量不建议修改
 opt="${1}"                    #是否强制安装，如果指定了force，当数据目录不为空则清空，端口被占用则kill掉进程
+version="${2}"
+[ "${version}x" == "x" ] && version="${1}"
 mgr_data_dir="${mgr_install_dir}/data"
 mgr_undo_dir="${mgr_install_dir}/undo"
 mgr_logs_dir="${mgr_install_dir}/logs"
@@ -41,7 +45,6 @@ then
 	sed -i '/\[mysql\]/aprompt                                                       = \\u@\\h:\\p\\ [\\ \\d\\ ]\\ >\\ ' /etc/my.cnf
 fi
 
-
 function f_get_mysql_conf()
 {
 	if [ ${4} -lt 7 ] #小于7个节点步长+2	
@@ -64,9 +67,12 @@ prompt                                                       = \\u@\\h:\\p\\ [\\
 server-id                                                    = ${server_id}999999
 user                                                         = mysql
 port                                                         = 999999
+loose_mysqlx_port                                            = 9999990
+loose_admin_port                                             = 9999992
 basedir                                                      = ${mysql_base_dir}
 datadir                                                      = ${mgr_data_dir}/999999
 socket                                                       = ${mgr_logs_dir}/999999/mysqld.sock
+loose_mysqlx_socket                                          = ${mgr_logs_dir}/999999/mysqlx.sock
 pid-file                                                     = ${mgr_logs_dir}/999999/mysql.pid
 character-set-server                                         = utf8mb4
 transaction_isolation                                        = READ-COMMITTED
@@ -103,8 +109,8 @@ join_buffer_size                                             = 4M
 tmp_table_size                                               = 64M
 max_heap_table_size                                          = 64M
 thread_cache_size                                            = 64
-query_cache_size                                             = 0
-query_cache_type                                             = 0
+loose_query_cache_size                                       = 0
+loose_query_cache_type                                       = 0
 key_buffer_size                                              = 16M
 max_length_for_sort_data                                     = 8096
 bulk_insert_buffer_size                                      = 64M
@@ -139,17 +145,17 @@ innodb_io_capacity_max                                       = 4000
 innodb_flush_method                                          = O_DIRECT
 
 #undo
-innodb_undo_directory                                        = ${mgr_undo_dir}/999999
-innodb_undo_logs                                             = 128
-innodb_undo_tablespaces                                      = 3
-innodb_max_undo_log_size                                     = 4G
-innodb_undo_log_truncate                                     = 1
+loose_innodb_undo_directory                                  = ${mgr_undo_dir}/999999
+loose_innodb_undo_logs                                       = 128
+loose_innodb_undo_tablespaces                                = 3
+loose_innodb_max_undo_log_size                               = 4G
+loose_innodb_undo_log_truncate                               = 1
 
 innodb_flush_neighbors                                       = 0
 innodb_log_file_size                                         = 256M
 innodb_log_files_in_group                                    = 3
 innodb_log_buffer_size                                       = 32M
-innodb_large_prefix                                          = 1
+loose_innodb_large_prefix                                    = 1
 innodb_thread_concurrency                                    = 64
 innodb_print_all_deadlocks                                   = 1
 innodb_strict_mode                                           = 1
@@ -165,10 +171,10 @@ innodb_online_alter_log_max_size                             = 4G
 innodb_open_files                                            = 65535
 innodb_data_file_path                                        = ibdata1:512M:autoextend
 innodb_flush_log_at_trx_commit                               = 1
-innodb_checksums                                             = 1
+loose_innodb_checksums                                       = 1
 innodb_checksum_algorithm                                    = crc32
 innodb_rollback_on_timeout                                   = 1
-internal_tmp_disk_storage_engine                             = InnoDB
+loose_internal_tmp_disk_storage_engine                       = InnoDB
 innodb_status_file                                           = 1
 innodb_status_output_locks                                   = 1
 
@@ -225,7 +231,7 @@ super_read_only                                              = 1
 binlog_transaction_dependency_tracking                       = WRITESET
 transaction-write-set-extraction                             = XXHASH64
 binlog_transaction_dependency_history_size                   = 25000
-# report_host = 127.0.0.1 
+report_host                                                  = 127.0.0.1 
 # optional for group replication
 binlog_checksum                                              = NONE # only for group replication
 loose-group_replication_group_name                           = '38f8425e-9182-5934-b32a-7e4317fe4a04'
@@ -331,8 +337,8 @@ function f_init_mysql()
 	eval chown -R mysql. ${mgr_base_dir}
 	f_logging "INFO" "Start installing \033[35mMySQL\033[0m \033[32mfor\033[0m \033[34m${port}\033[0m"
 	f_logging "INFO" "Initializing for \033[35mMySQL\033[0m"
-	#echo "cd ${mysql_base_dir} && ./bin/mysqld --defaults-file=${mysql_conf} --initialize --user=mysql"
-	cd ${mysql_base_dir} && ./bin/mysqld --defaults-file=${mysql_conf} --initialize --user=mysql
+	#echo "cd ${mysql_base_dir} && ./bin/mysqld --defaults-file=${mysql_conf} --initialize --user=mysql --console"
+	cd ${mysql_base_dir} && ./bin/mysqld --defaults-file=${mysql_conf} --initialize --user=mysql --console
 	if [ $? -ne 0 ]
 	then
 		f_logging "ERROR" "Initialization failed for \033[35mMySQL\033[0m" "2" "0"|tee -a ${log_file}
@@ -369,7 +375,13 @@ function f_init_mysql()
 	sleep 2
 	f_logging "INFO" "Changing password root@localhost"
 	#echo "${mysql_path} -uroot -p"${passwd}" -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password -e \"set global super_read_only=0;set global read_only=0;set password=password('${mgr_admin_passwd}')\" 2>/dev/null"
-	${mysql_path} -uroot -p"${passwd}" -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password -e "set global super_read_only=0;set global read_only=0;set password=password('${mgr_admin_passwd}')" 2>/dev/null
+	if [ "${version}x" == "8.0x" ]
+	then
+		${mysql_path} -uroot -p"${passwd}" -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password -e "set global super_read_only=0;ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${mgr_admin_passwd}';" 2>/dev/null
+		^echo "${mysql_path} -uroot -p\"${passwd}\" -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password -e \"set global super_read_only=0;ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${mgr_admin_passwd}';\" 2>/dev/null"
+	else
+		${mysql_path} -uroot -p"${passwd}" -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password -e "set global super_read_only=0;set global read_only=0;set password=password('${mgr_admin_passwd}')" 2>/dev/null
+	fi
 	${mysql_path} -uroot -p${mgr_admin_passwd} -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password -e "select 1;" >/dev/null 2>&1
 	if [ $? -eq 0 ]
 	then
@@ -380,7 +392,13 @@ function f_init_mysql()
 		return
 	fi
 	f_logging "INFO" "Start installing \033[33mMGR"
-	${mysql_path} -uroot -p${mgr_admin_passwd} -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password -e "set global super_read_only=0;set sql_log_bin = 0;grant all on *.* to ${test_user}@'%' identified by '${test_passwd}';grant replication slave on *.* to rpl_user@'%' identified by 'rpl612534rpl';set sql_log_bin = 1;change master to master_user='rpl_user',master_password='rpl612534rpl' for channel 'group_replication_recovery';install plugin group_replication SONAME 'group_replication.so';" 2>/dev/null
+	if [ "${version}x" == "8.0x" ]
+	then
+		#${mysql_path} -uroot -p${mgr_admin_passwd} -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password -e "set global super_read_only=0;set sql_log_bin = 0;create user '${test_user}'@'%';ALTER USER '${test_user}'@'%' IDENTIFIED WITH mysql_native_password BY '${test_passwd}';grant all on *.* to ${test_user}@'%';create user '${repl_user}'@'%';ALTER USER '${repl_user}'@'%' IDENTIFIED WITH mysql_native_password BY '${repl_passwd}';set sql_log_bin = 1;change master to master_user='${repl_user}',master_password='${repl_passwd}' for channel 'group_replication_recovery';install plugin group_replication SONAME 'group_replication.so';" #2>/dev/null
+		${mysql_path} -uroot -p${mgr_admin_passwd} -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password -e "set global super_read_only=0;set sql_log_bin = 0;CREATE USER ${repl_user}@'%' IDENTIFIED BY '${repl_passwd}';GRANT REPLICATION SLAVE ON *.* TO ${repl_user}@'%';GRANT BACKUP_ADMIN ON *.* TO ${repl_user}@'%';FLUSH PRIVILEGES;set sql_log_bin = 1;change master to master_user='${repl_user}',master_password='${repl_passwd}' for channel 'group_replication_recovery';install plugin group_replication SONAME 'group_replication.so';" #2>/dev/null
+	else
+		${mysql_path} -uroot -p${mgr_admin_passwd} -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password -e "set global super_read_only=0;set sql_log_bin = 0;grant all on *.* to ${test_user}@'%' identified by '${test_passwd}';grant replication slave on *.* to ${repl_user}@'%' identified by '${repl_passwd}';set sql_log_bin = 1;change master to master_user='${repl_user}',master_password='${repl_passwd}' for channel 'group_replication_recovery';install plugin group_replication SONAME 'group_replication.so';" #2>/dev/null
+	fi
 	if [ $? -eq 0 ]
 	then
 		f_logging "INFO" "Initialization successful for \033[33mMGR\033[0m"|tee -a ${log_file}
@@ -393,20 +411,20 @@ function f_init_mysql()
 	then
 		echo -en "\033[33m"
 		#echo "${mysql_path} -uroot -p${mgr_admin_passwd} -S ${mgr_logs_dir}/${port}/mysqld.sock -e \"set global group_replication_bootstrap_group=on;start group_replication;set global group_replication_bootstrap_group=off;select * from performance_schema.replication_group_members;\" 2>/dev/null"
-		${mysql_path} -uroot -p${mgr_admin_passwd} -S ${mgr_logs_dir}/${port}/mysqld.sock -e "set global group_replication_bootstrap_group=on;start group_replication;set global group_replication_bootstrap_group=off;select * from performance_schema.replication_group_members;" 2> ${error_file}
+		${mysql_path} -uroot -p${mgr_admin_passwd} -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password -e "set global group_replication_bootstrap_group=on;start group_replication;set global group_replication_bootstrap_group=off;select * from performance_schema.replication_group_members;" #2> ${error_file}
 		if [ $? -eq 0 ]
 		then
 			mgr_stat=1
 			mgr_pri_stat=1
 		fi
 		echo -en "\033[0m"
-		master_gtid="$(${mysql_path} -uroot -p${mgr_admin_passwd} -S ${mgr_logs_dir}/${port}/mysqld.sock -e "show master status\G" 2>/dev/null|grep -A 1000 "Executed_Gtid_Set:"|sed 's/Executed_Gtid_Set: //'|tr -d "\n")"
+		master_gtid="$(${mysql_path} -uroot -p${mgr_admin_passwd} -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password -e "show master status\G" 2>/dev/null|grep -A 1000 "Executed_Gtid_Set:"|sed 's/Executed_Gtid_Set: //'|tr -d "\n")"
 	else
 		if [ "${mgr_pri_stat}x" == "1x" ]
 		then
 			echo -en "\033[33m"
 			#echo ${mysql_path} -uroot -p${mgr_admin_passwd} -S ${mgr_logs_dir}/${port}/mysqld.sock -e \"reset master;set global gtid_purged='${master_gtid}';start group_replication;select * from performance_schema.replication_group_members;\" 2>/dev/null"
-			${mysql_path} -uroot -p${mgr_admin_passwd} -S ${mgr_logs_dir}/${port}/mysqld.sock -e "reset master;set global gtid_purged='${master_gtid}';start group_replication;select * from performance_schema.replication_group_members;" 2> ${error_file}
+			${mysql_path} -uroot -p${mgr_admin_passwd} -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password -e "reset master;set global gtid_purged='${master_gtid}';start group_replication;select * from performance_schema.replication_group_members;" #2> ${error_file}
 			[ $? -eq 0 ] && mgr_stat=1
 			echo -en "\033[0m"
 		else
