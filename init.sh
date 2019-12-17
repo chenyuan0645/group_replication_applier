@@ -67,12 +67,10 @@ prompt                                                       = \\u@\\h:\\p\\ [\\
 server-id                                                    = ${server_id}999999
 user                                                         = mysql
 port                                                         = 999999
-loose_mysqlx_port                                            = 9999990
 loose_admin_port                                             = 9999992
 basedir                                                      = ${mysql_base_dir}
 datadir                                                      = ${mgr_data_dir}/999999
 socket                                                       = ${mgr_logs_dir}/999999/mysqld.sock
-loose_mysqlx_socket                                          = ${mgr_logs_dir}/999999/mysqlx.sock
 pid-file                                                     = ${mgr_logs_dir}/999999/mysql.pid
 character-set-server                                         = utf8mb4
 transaction_isolation                                        = READ-COMMITTED
@@ -83,6 +81,12 @@ sql_mode                                                     = NO_ENGINE_SUBSTIT
 
 ###TMP DIR
 tmpdir                                                       = ${mgr_tmp_dir}/999999
+
+
+default_authentication_plugin                                = mysql_native_password
+mysqlx                                                       = off
+
+
 
 ###CONNECTION SETTINGS
 interactive_timeout                                          = 30
@@ -231,7 +235,8 @@ super_read_only                                              = 1
 binlog_transaction_dependency_tracking                       = WRITESET
 transaction-write-set-extraction                             = XXHASH64
 binlog_transaction_dependency_history_size                   = 25000
-report_host                                                  = 127.0.0.1 
+report_host                                                  = ${localhost_ip}
+bind_address                                                 = 0.0.0.0
 # optional for group replication
 binlog_checksum                                              = NONE # only for group replication
 loose-group_replication_group_name                           = '38f8425e-9182-5934-b32a-7e4317fe4a04'
