@@ -15,6 +15,7 @@ test_user="test"
 test_passwd="test"
 repl_user="repl_user"
 repl_passwd="repl_user615234"
+mgr_single_primary=0         #是否开单主, 1表示是单主
 
 
 #以下变量不建议修改
@@ -55,6 +56,14 @@ function f_get_mysql_conf()
 		increment=${4}
 	fi
 	offset=${5} #起始值
+	if [ "${mgr_single_primary}x" == "1x" ]
+	then
+		single_primary=1
+		enforce_update_check=0
+	else
+		single_primary=0
+		enforce_update_check=1
+	fi
 	mkdir -p ${2}
 	cat <<EOF |sed "s/999999/${1}/g" > ${3}
 [mysql]
@@ -245,8 +254,8 @@ loose-group_replication_start_on_boot                        = off
 loose-group_replication_local_address                        = "${localhost_ip}:2999999"
 loose-group_replication_group_seeds                          = "$(echo "${mgr_port[@]}"|tr " " "\n"|awk -v ip="${localhost_ip}" '{print ip":2"$1}'|tr "\n" ","|sed 's/,$//g')"
 loose-group_replication_bootstrap_group                      = off
-loose_group_replication_single_primary_mode                  = 0
-loose_group_replication_enforce_update_everywhere_checks     = 1
+loose_group_replication_single_primary_mode                  = ${single_primary}
+loose_group_replication_enforce_update_everywhere_checks     = ${enforce_update_check}
 loose_group_replication_unreachable_majority_timeout         = 120
 loose_group_replication_start_on_boot                        = 0
 loose_group_replication_ip_whitelist                         = "$(awk -F'.' '{print $1"."$2"."$3".0/24"}' <<< "${localhost_ip}")"

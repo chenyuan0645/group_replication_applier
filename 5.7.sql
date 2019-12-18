@@ -77,21 +77,21 @@ performance_schema.replication_group_members WHERE MEMBER_STATE != 'ONLINE') >=
 performance_schema.replication_group_member_stats USING(member_id) where member_id = (select VARIABLE_VALUE from performance_schema.global_variables where VARIABLE_NAME = 'server_uuid'));
 END$$
 
-
-drop VIEW if exists gr_member_routing_candidate_status$$
-CREATE VIEW gr_member_routing_candidate_status AS SELECT sys.gr_member_in_primary_partition() AS viable_candidate, IF((
+DELIMITER $$
+drop VIEW if exists v_mgr_monitor $$
+CREATE VIEW v_mgr_monitor  AS SELECT pfsrgm.MEMBER_ID,(select if(VARIABLE_VALUE='','PRIMARY',VARIABLE_VALUE) from performance_schema.global_status where VARIABLE_NAME = 'group_replication_primary_member') MEMBER_ROLE ,pfsrgm.MEMBER_STATE,sys.gr_member_in_primary_partition() AS viable_candidate, IF((
 		SELECT (
 				SELECT GROUP_CONCAT(variable_value)
 				FROM performance_schema.global_variables
 				WHERE variable_name IN ('read_only', 'super_read_only')
 			) != 'OFF,OFF'
 	), 'YES', 'NO') AS read_only
-	, sys.gr_applier_queue_length() AS transactions_behind, Count_Transactions_in_queue AS 'transactions_to_cert', pfsrgm.MEMBER_STATE
+	, sys.gr_applier_queue_length() AS transactions_behind, Count_Transactions_in_queue AS 'transactions_to_cert'
 FROM performance_schema.replication_group_member_stats pfsrgms join performance_schema.replication_group_members pfsrgm on pfsrgms.MEMBER_ID = pfsrgm.MEMBER_ID
 WHERE pfsrgms.member_id = (
 	SELECT VARIABLE_VALUE
 	FROM performance_schema.global_variables
 	WHERE VARIABLE_NAME = 'server_uuid'
-);$$
+)$$
 
 DELIMITER ;
