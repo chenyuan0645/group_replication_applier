@@ -303,7 +303,7 @@ function f_check_port()
 				echo
 				if [ "${opt}x" == "forcex" ]
 				then
-					netstat -anplt|grep mysqld|grep ":::${p}"|awk '{print $NF}'|awk -F/ '{print $1}'|tail -1|xargs -i kill -9 {}
+					netstat -anplt|grep mysqld|grep -w "${p}"|awk '{print $NF}'|awk -F/ '{print $1}'|tail -1|xargs -i kill -9 {}
 				else
 					exit
 				fi
