@@ -452,7 +452,7 @@ function f_init_mysql()
 			fi
 			if [ -f "${work_dir}/${sql_file}" ]
 			then
-				cat ${sql_file}|${mysql_path} -uroot -p${mgr_admin_passwd} -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password
+				cat ${work_dir}/${sql_file}|${mysql_path} -uroot -p${mgr_admin_passwd} -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password
 			fi
 		fi
 	else
