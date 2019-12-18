@@ -347,7 +347,7 @@ function f_init_mysql()
 	if [ $? -ne 0 ]
 	then
 		f_logging "ERROR" "Initialization failed for \033[35mMySQL\033[0m" "2" "0"|tee -a ${log_file}
-		return
+		return 1
 	else
 		f_logging "INFO" "Initialization successful for \033[35mMySQL\033[0m"|tee -a ${log_file}
 	fi
@@ -360,8 +360,8 @@ function f_init_mysql()
 		sleep 3
 		if [ "$(ps -ef|grep mysqld|grep -c "${mysql_conf}")x" == "0x" ]
 		then
-			f_logging "ERROR" "Startup failed for \033[35mMySQL\033[0m" "2" "0"|tee -a ${log_file}
-			return
+			f_logging "ERROR" "Startup failed for \033[35mMySQL [ ${mysql_conf} ]\033[0m" "2" "0"|tee -a ${log_file}
+			return 1
 		else
 			if [ "$(ls ${mgr_logs_dir}/${port}/mysqld.sock 2>/dev/null|wc -l)x" == "1x" ]
 			then
@@ -371,8 +371,8 @@ function f_init_mysql()
 				if [ -f "/tmp/.stop_file" ]
 				then
 					rm -f /tmp/.stop_file
-					f_logging "ERROR" "Startup failed for \033[35mMySQL\033[0m" "2" "0"|tee -a ${log_file}
-					return
+					f_logging "ERROR" "Startup failed for \033[35mMySQL [ ${mgr_logs_dir}/${port}/mysqld.sock ]\033[0m" "2" "0"|tee -a ${log_file}
+					return 1
 				fi
 			fi
 		fi
@@ -394,7 +394,7 @@ function f_init_mysql()
 		f_logging "INFO" "The installation is complete for \033[35mMySQL\033[0m"
 	else
 		f_logging "ERROR" "Change password unsuccessfully for root@localhost"
-		return 0
+		return 1
 	fi
 	f_logging "INFO" "Start installing \033[33mMGR"
 	if [ "${version}x" == "8.0x" ]
@@ -409,7 +409,7 @@ function f_init_mysql()
 		f_logging "INFO" "Initialization successful for \033[33mMGR\033[0m"|tee -a ${log_file}
 	else
 		f_logging "ERROR" "Initialization failed for \033[33mMGR\033[0m" "2" "0"|tee -a ${log_file}
-		return
+		return 1
 	fi
 	f_logging "INFO" "Starting \033[33mMGR\033[0m"
 	if [ "${port}x" == "${mgr_port[0]}x" ]
@@ -523,7 +523,7 @@ count=1
 for port in ${mgr_port[@]}
 do
 	f_init_mysql "${port}" "${count}"
-	[ "${?}x" == "0x" ] && f_init_mysql "${port}" "${count}"
+	[ "${?}x" == "1x" ] && f_init_mysql "${port}" "${count}"
 	count=$((${count}+1))
 done
 unset count
