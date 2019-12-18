@@ -311,7 +311,7 @@ function f_check_port()
 		fi
 	done
 	[ ${count} -gt 0 ] && exit
-	unset
+	unset count
 }
 
 function f_init_mysql()
@@ -383,7 +383,7 @@ function f_init_mysql()
 	if [ "${version}x" == "8.0x" ]
 	then
 		${mysql_path} -uroot -p"${passwd}" -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password -e "set global super_read_only=0;ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${mgr_admin_passwd}';" 2>/dev/null
-		^echo "${mysql_path} -uroot -p\"${passwd}\" -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password -e \"set global super_read_only=0;ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${mgr_admin_passwd}';\" 2>/dev/null"
+		#echo "${mysql_path} -uroot -p\"${passwd}\" -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password -e \"set global super_read_only=0;ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${mgr_admin_passwd}';\" 2>/dev/null"
 	else
 		${mysql_path} -uroot -p"${passwd}" -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password -e "set global super_read_only=0;set global read_only=0;set password=password('${mgr_admin_passwd}')" 2>/dev/null
 	fi
@@ -394,7 +394,7 @@ function f_init_mysql()
 		f_logging "INFO" "The installation is complete for \033[35mMySQL\033[0m"
 	else
 		f_logging "ERROR" "Change password unsuccessfully for root@localhost"
-		return
+		return 0
 	fi
 	f_logging "INFO" "Start installing \033[33mMGR"
 	if [ "${version}x" == "8.0x" ]
@@ -402,7 +402,7 @@ function f_init_mysql()
 		#${mysql_path} -uroot -p${mgr_admin_passwd} -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password -e "set global super_read_only=0;set sql_log_bin = 0;create user '${test_user}'@'%';ALTER USER '${test_user}'@'%' IDENTIFIED WITH mysql_native_password BY '${test_passwd}';grant all on *.* to ${test_user}@'%';create user '${repl_user}'@'%';ALTER USER '${repl_user}'@'%' IDENTIFIED WITH mysql_native_password BY '${repl_passwd}';set sql_log_bin = 1;change master to master_user='${repl_user}',master_password='${repl_passwd}' for channel 'group_replication_recovery';install plugin group_replication SONAME 'group_replication.so';" #2>/dev/null
 		${mysql_path} -uroot -p${mgr_admin_passwd} -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password -e "set global super_read_only=0;set sql_log_bin = 0;CREATE USER ${repl_user}@'%' IDENTIFIED BY '${repl_passwd}';GRANT REPLICATION SLAVE ON *.* TO ${repl_user}@'%';GRANT BACKUP_ADMIN ON *.* TO ${repl_user}@'%';FLUSH PRIVILEGES;set sql_log_bin = 1;change master to master_user='${repl_user}',master_password='${repl_passwd}' for channel 'group_replication_recovery';install plugin group_replication SONAME 'group_replication.so';" #2>/dev/null
 	else
-		${mysql_path} -uroot -p${mgr_admin_passwd} -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password -e "set global super_read_only=0;set sql_log_bin = 0;grant all on *.* to ${test_user}@'%' identified by '${test_passwd}';grant replication slave on *.* to ${repl_user}@'%' identified by '${repl_passwd}';set sql_log_bin = 1;change master to master_user='${repl_user}',master_password='${repl_passwd}' for channel 'group_replication_recovery';install plugin group_replication SONAME 'group_replication.so';" #2>/dev/null
+		${mysql_path} -uroot -p${mgr_admin_passwd} -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password -e "set global super_read_only=0;set sql_log_bin = 0;grant all on *.* to ${test_user}@'%' identified by '${test_passwd}';grant replication slave on *.* to ${repl_user}@'%' identified by '${repl_passwd}';set sql_log_bin = 1;change master to master_user='${repl_user}',master_password='${repl_passwd}' for channel 'group_replication_recovery';install plugin group_replication SONAME 'group_replication.so';" 2>/dev/null
 	fi
 	if [ $? -eq 0 ]
 	then
@@ -416,7 +416,7 @@ function f_init_mysql()
 	then
 		echo -en "\033[33m"
 		#echo "${mysql_path} -uroot -p${mgr_admin_passwd} -S ${mgr_logs_dir}/${port}/mysqld.sock -e \"set global group_replication_bootstrap_group=on;start group_replication;set global group_replication_bootstrap_group=off;select * from performance_schema.replication_group_members;\" 2>/dev/null"
-		${mysql_path} -uroot -p${mgr_admin_passwd} -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password -e "set global group_replication_bootstrap_group=on;start group_replication;set global group_replication_bootstrap_group=off;select * from performance_schema.replication_group_members;" #2> ${error_file}
+		${mysql_path} -uroot -p${mgr_admin_passwd} -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password -e "set global group_replication_bootstrap_group=on;start group_replication;set global group_replication_bootstrap_group=off;select * from performance_schema.replication_group_members;" 2> ${error_file}
 		if [ $? -eq 0 ]
 		then
 			mgr_stat=1
@@ -429,7 +429,7 @@ function f_init_mysql()
 		then
 			echo -en "\033[33m"
 			#echo ${mysql_path} -uroot -p${mgr_admin_passwd} -S ${mgr_logs_dir}/${port}/mysqld.sock -e \"reset master;set global gtid_purged='${master_gtid}';start group_replication;select * from performance_schema.replication_group_members;\" 2>/dev/null"
-			${mysql_path} -uroot -p${mgr_admin_passwd} -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password -e "reset master;set global gtid_purged='${master_gtid}';start group_replication;select * from performance_schema.replication_group_members;" #2> ${error_file}
+			${mysql_path} -uroot -p${mgr_admin_passwd} -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password -e "reset master;set global gtid_purged='${master_gtid}';start group_replication;select * from performance_schema.replication_group_members;" 2> ${error_file}
 			[ $? -eq 0 ] && mgr_stat=1
 			echo -en "\033[0m"
 		else
@@ -523,6 +523,7 @@ count=1
 for port in ${mgr_port[@]}
 do
 	f_init_mysql "${port}" "${count}"
+	[ "${?}x" == "0x" ] && f_init_mysql "${port}" "${count}"
 	count=$((${count}+1))
 done
 unset count
