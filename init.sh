@@ -5,7 +5,8 @@
 # Created Time: 2019-12-04 09:31:07
 # Function    : Install MGR for Linux
 #########################################################################
-mgr_install_dir="/data/mgr"
+work_dir="/data/git/install_mgr"
+mgr_install_dir="/data/mgr/mgr"
 mgr_port=(4406 4407 4408)
 mgr_admin_passwd="mgrpassword"
 mysql_base_dir="/data/mgr/base"
@@ -449,7 +450,7 @@ function f_init_mysql()
 			else
 				sql_file="5.7.sql"
 			fi
-			if [ -f "${sql_file}" ]
+			if [ -f "${work_dir}/${sql_file}" ]
 			then
 				cat ${sql_file}|${mysql_path} -uroot -p${mgr_admin_passwd} -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password
 			fi

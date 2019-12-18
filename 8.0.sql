@@ -1,39 +1,32 @@
-USE sys;
+use sys;
+drop FUNCTION if exists IFZERO;
+drop FUNCTION if exists LOCATE2;
+drop FUNCTION if exists GTID_NORMALIZE ;
+drop FUNCTION if exists GTID_COUNT;
+drop FUNCTION if exists gr_applier_queue_length ;
+drop FUNCTION if exists gr_member_in_primary_partition;
 
-DELIMITER $$
+DELIMITER ;;
+CREATE FUNCTION `IFZERO`(a INT, b INT) RETURNS int(11)
+    DETERMINISTIC
+RETURN IF(a = 0, b, a) ;;
+DELIMITER ;
 
-drop FUNCTION if exists IFZERO $$
+DELIMITER ;;
+CREATE FUNCTION `LOCATE2`(needle TEXT(10000), haystack TEXT(10000), offset INT) RETURNS int(11)
+    DETERMINISTIC
+RETURN IFZERO(LOCATE(needle, haystack, offset), LENGTH(haystack) + 1) ;;
+DELIMITER ;
 
-CREATE FUNCTION IFZERO(a INT, b INT)
-RETURNS INT
-DETERMINISTIC
-RETURN IF(a = 0, b, a)
-$$
+DELIMITER ;;
+CREATE FUNCTION `GTID_NORMALIZE`(g TEXT(10000)) RETURNS text
+    DETERMINISTIC
+RETURN GTID_SUBTRACT(g, '') ;;
+DELIMITER ;
 
-drop FUNCTION if exists LOCATE2 $$
-
-CREATE FUNCTION LOCATE2(needle TEXT(10000), haystack TEXT(10000), offset INT)
-RETURNS INT
-DETERMINISTIC
-RETURN IFZERO(LOCATE(needle, haystack, offset), LENGTH(haystack) + 1)
-$$
-
-
-
-drop FUNCTION if exists GTID_NORMALIZE $$
-
-CREATE FUNCTION GTID_NORMALIZE(g TEXT(10000))
-RETURNS TEXT(10000)
-DETERMINISTIC
-RETURN GTID_SUBTRACT(g, '')
-$$
-
-
-drop FUNCTION if exists GTID_COUNT $$
-
-CREATE FUNCTION GTID_COUNT(gtid_set TEXT(10000))
-RETURNS INT
-DETERMINISTIC
+DELIMITER ;;
+CREATE FUNCTION `GTID_COUNT`(gtid_set TEXT(10000)) RETURNS int(11)
+    DETERMINISTIC
 BEGIN
   DECLARE result BIGINT DEFAULT 0;
   DECLARE colon_pos INT;
@@ -57,35 +50,50 @@ BEGIN
      SET colon_pos = next_colon_pos;
   END WHILE;
   RETURN result;
-END
-$$
-
-
-drop FUNCTION if exists gr_applier_queue_length $$
-
-CREATE FUNCTION gr_applier_queue_length()
-RETURNS INT
-DETERMINISTIC
-BEGIN
-  RETURN (SELECT sys.gtid_count(GTID_SUBTRACT((SELECT Received_transaction_set FROM performance_schema.replication_connection_status WHERE Channel_name = 'group_replication_applier'), (SELECT @@global.GTID_EXECUTED))));
-END
-$$
-
-
-drop FUNCTION if exists gr_member_in_primary_partition $$
-
-CREATE FUNCTION gr_member_in_primary_partition()
-RETURNS VARCHAR(3)
-DETERMINISTIC
-BEGIN
-  RETURN (SELECT IF(MEMBER_STATE = 'ONLINE' AND (SELECT COUNT(*) FROM performance_schema.replication_group_members WHERE MEMBER_STATE != 'ONLINE') >= (SELECT COUNT(*) FROM performance_schema.replication_group_members) / 2 = 0, 'YES', 'NO') FROM performance_schema.replication_group_members JOIN performance_schema.replication_group_member_stats USING (member_id) WHERE member_id = (SELECT VARIABLE_VALUE FROM performance_schema.global_variables WHERE VARIABLE_NAME = 'server_uuid'));
-END
-$$
-
-
-drop VIEW if exists gr_member_routing_candidate_status $$
-
-CREATE VIEW gr_member_routing_candidate_status AS SELECT performance_schema.replication_group_members.MEMBER_ROLE, performance_schema.replication_group_members.MEMBER_STATE, ifnull(tmp.viable_candidate,sys.gr_member_in_primary_partition()) viable_candidate,read_only, tmp.transactions_behind , tmp.transactions_to_cert FROM performance_schema.replication_group_members LEFT JOIN (SELECT pfsrgm.MEMBER_ID, pfsrgm.MEMBER_ROLE, sys.gr_member_in_primary_partition() AS viable_candidate, IF((SELECT (SELECT GROUP_CONCAT(variable_value)	FROM performance_schema.global_variables WHERE variable_name IN ('read_only', 'super_read_only')) != 'OFF,OFF'), 'YES', 'NO') AS read_only , sys.gr_applier_queue_length() AS transactions_behind, Count_Transactions_in_queue AS 'transactions_to_cert', pfsrgm.MEMBER_STATE FROM performance_schema.replication_group_member_stats pfsrgms JOIN performance_schema.replication_group_members pfsrgm ON pfsrgms.MEMBER_ID = pfsrgm.MEMBER_ID WHERE pfsrgms.member_id = (SELECT VARIABLE_VALUE FROM performance_schema.global_variables WHERE VARIABLE_NAME = 'server_uuid')) tmp USING (member_id);
-$$
-
+END ;;
 DELIMITER ;
+
+DELIMITER ;;
+CREATE FUNCTION `gr_applier_queue_length`() RETURNS int(11)
+    DETERMINISTIC
+BEGIN
+  RETURN (SELECT sys.gtid_count(GTID_SUBTRACT((
+SELECT Received_transaction_set
+FROM performance_schema.replication_connection_status
+WHERE Channel_name = 'group_replication_applier'
+), (
+SELECT @@global.GTID_EXECUTED
+))));
+END ;;
+DELIMITER ;
+
+DELIMITER ;;
+CREATE FUNCTION `gr_member_in_primary_partition`() RETURNS varchar(3)
+    DETERMINISTIC
+BEGIN
+  RETURN (SELECT IF(MEMBER_STATE = 'ONLINE'
+AND (
+SELECT COUNT(*)
+FROM performance_schema.replication_group_members
+WHERE MEMBER_STATE != 'ONLINE'
+) >= (
+SELECT COUNT(*)
+FROM performance_schema.replication_group_members
+) / 2 = 0, 'YES', 'NO')
+FROM performance_schema.replication_group_members
+JOIN performance_schema.replication_group_member_stats USING (member_id)
+WHERE member_id = (
+SELECT VARIABLE_VALUE
+FROM performance_schema.global_variables
+WHERE VARIABLE_NAME = 'server_uuid'
+));
+END ;;
+DELIMITER ;
+
+drop VIEW if exists v_mgr_monitor;
+CREATE VIEW v_mgr_monitor AS SELECT pfsrgm.MEMBER_ID AS MEMBER_ID, pfsrgm.MEMBER_ROLE AS MEMBER_ROLE,pfsrgm.MEMBER_STATE AS MEMBER_STATE ,sys.gr_member_in_primary_partition() AS viable_candidate , if(( SELECT ( SELECT GROUP_CONCAT(performance_schema.global_variables.VARIABLE_VALUE SEPARATOR ',') FROM performance_schema.global_variables WHERE performance_schema.global_variables.VARIABLE_NAME IN ('read_only', 'super_read_only')) <> 'OFF,OFF' ), 'YES', 'NO') AS read_only , sys.gr_applier_queue_length() AS transactions_behind, pfsrgms.COUNT_TRANSACTIONS_IN_QUEUE AS transactions_to_cert FROM performance_schema.replication_group_member_stats pfsrgms JOIN performance_schema.replication_group_members pfsrgm ON pfsrgms.MEMBER_ID = pfsrgm.MEMBER_ID WHERE pfsrgms.MEMBER_ID = ( SELECT performance_schema.global_variables.VARIABLE_VALUE FROM performance_schema.global_variables WHERE performance_schema.global_variables.VARIABLE_NAME = 'server_uuid') ;
+
+select t1.MEMBER_ID,t1.MEMBER_ROLE,t1.MEMBER_STATE,ifnull(t2.viable_candidate,sys.gr_member_in_primary_partition()) viable_candidate,t2.read_only AS read_only, t2.transactions_behind AS transactions_behind, t2.transactions_to_cert AS transactions_to_cert from (SELECT MEMBER_ROLE, MEMBER_STATE, MEMBER_ID FROM performance_schema.replication_group_members) t1 left join sys.v_mgr_monitor t2 on t1.MEMBER_ID = t2.MEMBER_ID; 
+
+
+
