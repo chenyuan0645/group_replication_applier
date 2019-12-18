@@ -441,7 +441,19 @@ function f_init_mysql()
 	then
 		f_logging "INFO" "Successful startup for \033[33mMGR\033[0m \033[32mon\033[0m \033[34m${port}\033[0m"
 		mgr_online="$(${mysql_path} -uroot -p${mgr_admin_passwd} -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password -NBe "select count(*) from performance_schema.replication_group_members where MEMBER_STATE = 'ONLINE';" 2>/dev/null)"
-		echo "${mgr_online}"
+		if [ ${mgr_online} -gt $((${#mgr_port[@]}/2)) ]
+		then
+			if [ "${version}x" == "8.0x" ]
+			then
+				sql_file="8.0.sql"
+			else
+				sql_file="5.7.sql"
+			fi
+			if [ -f "${sql_file}" ]
+			then
+				cat ${sql_file}|${mysql_path} -uroot -p${mgr_admin_passwd} -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password
+			fi
+		fi
 	else
 		f_logging "ERROR" "Startup failed for \033[33mMGR\033[0m \033[32mon\033[0m \033[34m${port}\033[0m" "2" "0"
 		echo -e "\033[31m"
