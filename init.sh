@@ -84,7 +84,7 @@ tmpdir                                                       = ${mgr_tmp_dir}/99
 
 
 default_authentication_plugin                                = mysql_native_password
-mysqlx                                                       = off
+loose_mysqlx                                                 = off
 
 
 
