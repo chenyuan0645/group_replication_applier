@@ -332,7 +332,7 @@ function f_init_mysql()
 	f_get_mysql_conf "${port}" "${mgr_conf_dir}/${port}" "${mysql_conf}" "${#mgr_port[@]}" "${2}"
 	if [ "$(ls ${mgr_data_dir}/${port} 2> /dev/null|wc -l)x"  != "0x" ]
 	then
-		f_logging "WARN" "${mgr_data_dir}/${port} is not empy and EXIT!"
+		f_logging "WARN" "${mgr_data_dir}/${port} is not empy and EXIT!"|tee -a ${log_file}
 		echo
 		if [ "${opt}x" == "forcex" ]
 		then
@@ -350,8 +350,8 @@ function f_init_mysql()
 		eval mkdir -p ${mgr_base_dir}/${port}
 	fi
 	eval chown -R mysql. ${mgr_base_dir}
-	f_logging "INFO" "Start installing \033[35mMySQL\033[0m \033[32mfor\033[0m \033[34m${port}\033[0m"
-	f_logging "INFO" "Initializing for \033[35mMySQL\033[0m"
+	f_logging "INFO" "Start installing \033[35mMySQL\033[0m \033[32mfor\033[0m \033[34m${port}\033[0m"|tee -a ${log_file}
+	f_logging "INFO" "Initializing for \033[35mMySQL\033[0m"|tee -a ${log_file}
 	#echo "cd ${mysql_base_dir} && ./bin/mysqld --defaults-file=${mysql_conf} --initialize --user=mysql --console"
 	cd ${mysql_base_dir} && ./bin/mysqld --defaults-file=${mysql_conf} --initialize --user=mysql --console
 	if [ $? -ne 0 ]
@@ -362,7 +362,7 @@ function f_init_mysql()
 		f_logging "INFO" "Initialization successful for \033[35mMySQL\033[0m"|tee -a ${log_file}
 	fi
 	passwd="$(grep "root@localhost:" ${mgr_logs_dir}/${port}/mysql-error.log |awk '{print $NF}'|tail -1)"
-	f_logging "INFO" "Starting \033[35mMySQL\033[0m"
+	f_logging "INFO" "Starting \033[35mMySQL\033[0m"|tee -a ${log_file}
 	cd ${mysql_base_dir} && ./bin/mysqld --defaults-file=${mysql_conf} --user=mysql &
 	{ sleep 60 && touch /tmp/.stop_file; }&
 	while :
@@ -388,7 +388,7 @@ function f_init_mysql()
 		fi
 	done
 	sleep 2
-	f_logging "INFO" "Changing password root@localhost"
+	f_logging "INFO" "Changing password root@localhost"|tee -a ${log_file}
 	#echo "${mysql_path} -uroot -p"${passwd}" -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password -e \"set global super_read_only=0;set global read_only=0;set password=password('${mgr_admin_passwd}')\" 2>/dev/null"
 	if [ "${version}x" == "8.0x" ]
 	then
@@ -400,13 +400,13 @@ function f_init_mysql()
 	${mysql_path} -uroot -p${mgr_admin_passwd} -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password -e "select 1;" >/dev/null 2>&1
 	if [ $? -eq 0 ]
 	then
-		f_logging "INFO" "Change password successfully for root@localhost"
-		f_logging "INFO" "The installation is complete for \033[35mMySQL\033[0m"
+		f_logging "INFO" "Change password successfully for root@localhost"|tee -a ${log_file}
+		f_logging "INFO" "The installation is complete for \033[35mMySQL\033[0m"|tee -a ${log_file}
 	else
-		f_logging "ERROR" "Change password unsuccessfully for root@localhost"
+		f_logging "ERROR" "Change password unsuccessfully for root@localhost" "2" "0"|tee -a ${log_file}
 		return 1
 	fi
-	f_logging "INFO" "Start installing \033[33mMGR"
+	f_logging "INFO" "Start installing \033[33mMGR"|tee -a ${log_file}
 	if [ "${version}x" == "8.0x" ]
 	then
 		#${mysql_path} -uroot -p${mgr_admin_passwd} -S ${mgr_logs_dir}/${port}/mysqld.sock --connect-expired-password -e "set global super_read_only=0;set sql_log_bin = 0;create user '${test_user}'@'%';ALTER USER '${test_user}'@'%' IDENTIFIED WITH mysql_native_password BY '${test_passwd}';grant all on *.* to ${test_user}@'%';create user '${repl_user}'@'%';ALTER USER '${repl_user}'@'%' IDENTIFIED WITH mysql_native_password BY '${repl_passwd}';set sql_log_bin = 1;change master to master_user='${repl_user}',master_password='${repl_passwd}' for channel 'group_replication_recovery';install plugin group_replication SONAME 'group_replication.so';" #2>/dev/null
@@ -421,7 +421,7 @@ function f_init_mysql()
 		f_logging "ERROR" "Initialization failed for \033[33mMGR\033[0m" "2" "0"|tee -a ${log_file}
 		return 1
 	fi
-	f_logging "INFO" "Starting \033[33mMGR\033[0m"
+	f_logging "INFO" "Starting \033[33mMGR\033[0m"|tee -a ${log_file}
 	if [ "${port}x" == "${mgr_port[0]}x" ]
 	then
 		echo -en "\033[33m"
