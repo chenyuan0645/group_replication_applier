@@ -79,7 +79,7 @@ END$$
 
 DELIMITER $$
 drop VIEW if exists v_mgr_monitor $$
-CREATE VIEW v_mgr_monitor  AS SELECT pfsrgm.MEMBER_ID,(select if(VARIABLE_VALUE='','PRIMARY',VARIABLE_VALUE) from performance_schema.global_status where VARIABLE_NAME = 'group_replication_primary_member') MEMBER_ROLE ,pfsrgm.MEMBER_STATE,sys.gr_member_in_primary_partition() AS viable_candidate, IF((
+CREATE VIEW v_mgr_monitor  AS SELECT pfsrgm.MEMBER_ID,if((select if(VARIABLE_VALUE='',(select if(VARIABLE_VALUE='','PRIMARY',VARIABLE_VALUE) from performance_schema.global_variables where VARIABLE_NAME = 'server_uuid'),VARIABLE_VALUE) from performance_schema.global_status where VARIABLE_NAME = 'group_replication_primary_member')=(select if(VARIABLE_VALUE='','PRIMARY',VARIABLE_VALUE) from performance_schema.global_variables where VARIABLE_NAME = 'server_uuid'),'PRIMARY','SECONDARY') MEMBER_ROLE,pfsrgm.MEMBER_STATE,sys.gr_member_in_primary_partition() AS viable_candidate, IF((
 		SELECT (
 				SELECT GROUP_CONCAT(variable_value)
 				FROM performance_schema.global_variables
@@ -95,3 +95,9 @@ WHERE pfsrgms.member_id = (
 )$$
 
 DELIMITER ;
+
+
+
+
+-- select t1.MEMBER_ID,if(t1.MEMBER_ID = (select if(VARIABLE_VALUE='','PRIMARY',VARIABLE_VALUE) from performance_schema.global_status where VARIABLE_NAME = 'group_replication_primary_member') or (select if(VARIABLE_VALUE='','PRIMARY',VARIABLE_VALUE) from performance_schema.global_status where VARIABLE_NAME = 'group_replication_primary_member') = 'PRIMARY' ,'PRIMARY','SECONDARY') MEMBER_ROLE,t1.MEMBER_STATE,ifnull(t2.viable_candidate,sys.gr_member_in_primary_partition()) viable_candidate,t2.read_only AS read_only, t2.transactions_behind AS transactions_behind, t2.transactions_to_cert AS transactions_to_cert from (SELECT  MEMBER_STATE, MEMBER_ID FROM performance_schema.replication_group_members) t1 left join sys.v_mgr_monitor t2 on t1.MEMBER_ID = t2.MEMBER_ID;
+
