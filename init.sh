@@ -364,7 +364,7 @@ function f_init_mysql()
 	passwd="$(grep "root@localhost:" ${mgr_logs_dir}/${port}/mysql-error.log |awk '{print $NF}'|tail -1)"
 	f_logging "INFO" "Starting \033[35mMySQL\033[0m"|tee -a ${log_file}
 	cd ${mysql_base_dir} && ./bin/mysqld --defaults-file=${mysql_conf} --user=mysql &
-	{ sleep 60 && touch /tmp/.stop_file; }&
+	t_sleep=1
 	while :
 	do
 		sleep 3
@@ -378,14 +378,14 @@ function f_init_mysql()
 				f_logging "INFO" "Successful startup for \033[35mMySQL\033[0m"|tee -a ${log_file}
 				break
 			else
-				if [ -f "/tmp/.stop_file" ]
+				if [ ${t_sleep} -gt 20 ]
 				then
-					rm -f /tmp/.stop_file
 					f_logging "ERROR" "Startup failed for \033[35mMySQL [ ${mgr_logs_dir}/${port}/mysqld.sock ]\033[0m" "2" "0"|tee -a ${log_file}
 					return 1
 				fi
 			fi
 		fi
+		t_sleep=$((${t_sleep}+1))
 	done
 	sleep 2
 	f_logging "INFO" "Changing password root@localhost"|tee -a ${log_file}
