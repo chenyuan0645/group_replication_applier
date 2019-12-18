@@ -5,7 +5,7 @@
 # Created Time: 2019-12-04 09:31:07
 # Function    : Install MGR for Linux
 #########################################################################
-mgr_install_dir="/data/mgr/mgr"
+mgr_install_dir="/data/mgr"
 mgr_port=(4406 4407 4408)
 mgr_admin_passwd="mgrpassword"
 mysql_base_dir="/data/mgr/base"
@@ -326,7 +326,7 @@ function f_init_mysql()
 		echo
 		if [ "${opt}x" == "forcex" ]
 		then
-			rm -rf ${mgr_data_dir} ${mgr_binlog_dir} ${mgr_tmp_dir} ${mgr_logs_dir} ${mgr_undo_dir}
+			rm -rf ${mgr_data_dir}/${port} ${mgr_binlog_dir}/${port} ${mgr_tmp_dir}/${port} ${mgr_logs_dir}/${port} ${mgr_undo_dir}/${port}
 			eval mkdir -p ${mgr_base_dir}/${port}
 		else
 			if [ "${port}x" == "${mgr_port[0]}x" ]
