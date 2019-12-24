@@ -1,3 +1,4 @@
+安装5.7MGR
 root /data/git/install_mgr >> bash init.sh
 
 [2019-12-06 14:23:14] [INFO] [172.20.10.2] Start installing MySQL for 4406
@@ -64,6 +65,90 @@ root /data/git/install_mgr >> bash init.sh
 |Role       | Host       | Comand                                                                           |
 +-----------+------------+----------------------------------------------------------------------------------+
 |Admin      | localhost  | mysql -uroot -pmgrpassword -S/data/mgr/logs/4406/mysqld.sock                     |
++-----------+------------+----------------------------------------------------------------------------------+
+|Test       | %          | mysql -utest -ptest -h172.20.10.2 -P4406                                         |
++-----------+------------+----------------------------------------------------------------------------------+
+root /data/git/install_mgr >> 
+
+
+
+
+
+安装8.0MGR
+root /data/git/install_mgr >> bash init.sh force 8.0
+
+[2019-12-24 16:38:03] [WARN] [172.20.10.2] /data/mgr/mgr/data/4406 is not empy and EXIT!
+
+[2019-12-24 16:38:03] [INFO] [172.20.10.2] Start installing MySQL for 4406
+[2019-12-24 16:38:03] [INFO] [172.20.10.2] Initializing for MySQL
+[2019-12-24 16:38:15] [INFO] [172.20.10.2] Initialization successful for MySQL
+[2019-12-24 16:38:15] [INFO] [172.20.10.2] Starting MySQL
+[2019-12-24 16:38:18] [INFO] [172.20.10.2] Successful startup for MySQL
+[2019-12-24 16:38:20] [INFO] [172.20.10.2] Changing password root@localhost
+[2019-12-24 16:38:20] [INFO] [172.20.10.2] Change password successfully for root@localhost
+[2019-12-24 16:38:20] [INFO] [172.20.10.2] The installation is complete for MySQL
+[2019-12-24 16:38:20] [INFO] [172.20.10.2] Start installing MGR
+[2019-12-24 16:38:20] [INFO] [172.20.10.2] Initialization successful for MGR
+[2019-12-24 16:38:20] [INFO] [172.20.10.2] Starting MGR
++---------------------------+--------------------------------------+-------------+-------------+--------------+-------------+----------------+
+| CHANNEL_NAME              | MEMBER_ID                            | MEMBER_HOST | MEMBER_PORT | MEMBER_STATE | MEMBER_ROLE | MEMBER_VERSION |
++---------------------------+--------------------------------------+-------------+-------------+--------------+-------------+----------------+
+| group_replication_applier | b82c51a7-2628-11ea-b7dd-66b0a60a51f4 | 172.20.10.2 |        4406 | RECOVERING   | PRIMARY     | 8.0.18         |
++---------------------------+--------------------------------------+-------------+-------------+--------------+-------------+----------------+
+[2019-12-24 16:38:24] [INFO] [172.20.10.2] Successful startup for MGR on 4406
+
+
+
+[2019-12-24 16:38:24] [WARN] [172.20.10.2] /data/mgr/mgr/data/4407 is not empy and EXIT!
+
+[2019-12-24 16:38:24] [INFO] [172.20.10.2] Start installing MySQL for 4407
+[2019-12-24 16:38:24] [INFO] [172.20.10.2] Initializing for MySQL
+[2019-12-24 16:38:35] [INFO] [172.20.10.2] Initialization successful for MySQL
+[2019-12-24 16:38:35] [INFO] [172.20.10.2] Starting MySQL
+[2019-12-24 16:38:42] [INFO] [172.20.10.2] Successful startup for MySQL
+[2019-12-24 16:38:44] [INFO] [172.20.10.2] Changing password root@localhost
+[2019-12-24 16:38:44] [INFO] [172.20.10.2] Change password successfully for root@localhost
+[2019-12-24 16:38:44] [INFO] [172.20.10.2] The installation is complete for MySQL
+[2019-12-24 16:38:44] [INFO] [172.20.10.2] Start installing MGR
+[2019-12-24 16:38:44] [INFO] [172.20.10.2] Initialization successful for MGR
+[2019-12-24 16:38:44] [INFO] [172.20.10.2] Starting MGR
++---------------------------+--------------------------------------+-------------+-------------+--------------+-------------+----------------+
+| CHANNEL_NAME              | MEMBER_ID                            | MEMBER_HOST | MEMBER_PORT | MEMBER_STATE | MEMBER_ROLE | MEMBER_VERSION |
++---------------------------+--------------------------------------+-------------+-------------+--------------+-------------+----------------+
+| group_replication_applier | b82c51a7-2628-11ea-b7dd-66b0a60a51f4 | 172.20.10.2 |        4406 | ONLINE       | PRIMARY     | 8.0.18         |
+| group_replication_applier | c492ae7f-2628-11ea-8320-66b0a60a51f4 | 172.20.10.2 |        4407 | RECOVERING   | PRIMARY     | 8.0.18         |
++---------------------------+--------------------------------------+-------------+-------------+--------------+-------------+----------------+
+[2019-12-24 16:38:49] [INFO] [172.20.10.2] Successful startup for MGR on 4407
+
+
+
+[2019-12-24 16:38:49] [WARN] [172.20.10.2] /data/mgr/mgr/data/4408 is not empy and EXIT!
+
+[2019-12-24 16:38:49] [INFO] [172.20.10.2] Start installing MySQL for 4408
+[2019-12-24 16:38:49] [INFO] [172.20.10.2] Initializing for MySQL
+[2019-12-24 16:39:04] [INFO] [172.20.10.2] Initialization successful for MySQL
+[2019-12-24 16:39:04] [INFO] [172.20.10.2] Starting MySQL
+[2019-12-24 16:39:19] [INFO] [172.20.10.2] Successful startup for MySQL
+[2019-12-24 16:39:21] [INFO] [172.20.10.2] Changing password root@localhost
+[2019-12-24 16:39:21] [INFO] [172.20.10.2] Change password successfully for root@localhost
+[2019-12-24 16:39:21] [INFO] [172.20.10.2] The installation is complete for MySQL
+[2019-12-24 16:39:21] [INFO] [172.20.10.2] Start installing MGR
+[2019-12-24 16:39:21] [INFO] [172.20.10.2] Initialization successful for MGR
+[2019-12-24 16:39:21] [INFO] [172.20.10.2] Starting MGR
++---------------------------+--------------------------------------+-------------+-------------+--------------+-------------+----------------+
+| CHANNEL_NAME              | MEMBER_ID                            | MEMBER_HOST | MEMBER_PORT | MEMBER_STATE | MEMBER_ROLE | MEMBER_VERSION |
++---------------------------+--------------------------------------+-------------+-------------+--------------+-------------+----------------+
+| group_replication_applier | b82c51a7-2628-11ea-b7dd-66b0a60a51f4 | 172.20.10.2 |        4406 | ONLINE       | PRIMARY     | 8.0.18         |
+| group_replication_applier | c492ae7f-2628-11ea-8320-66b0a60a51f4 | 172.20.10.2 |        4407 | ONLINE       | PRIMARY     | 8.0.18         |
+| group_replication_applier | d5236ba3-2628-11ea-8337-66b0a60a51f4 | 172.20.10.2 |        4408 | RECOVERING   | PRIMARY     | 8.0.18         |
++---------------------------+--------------------------------------+-------------+-------------+--------------+-------------+----------------+
+[2019-12-24 16:39:26] [INFO] [172.20.10.2] Successful startup for MGR on 4408
+
+
++-----------+------------+----------------------------------------------------------------------------------+
+|Role       | Host       | Comand                                                                           |
++-----------+------------+----------------------------------------------------------------------------------+
+|Admin      | localhost  | mysql -uroot -pmgrpassword -S/data/mgr/mgr/logs/4406/mysqld.sock                 |
 +-----------+------------+----------------------------------------------------------------------------------+
 |Test       | %          | mysql -utest -ptest -h172.20.10.2 -P4406                                         |
 +-----------+------------+----------------------------------------------------------------------------------+
